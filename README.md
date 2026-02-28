@@ -26,7 +26,7 @@ If you are on a Mac and don't want to mess with code, you can just use the pre-b
 2. Because I'm not a registered Apple Developer, macOS maybe blocks the app if you just double-click it. 
 3. **If so: To open it:** **Right-click** (or Control-click) the `.app` file and select **Open**. Click **Open** again in the warning prompt. 
 4. Click "Change File" and find your savegame.
-   *(Usually located in `~/Library/Application Support/noio/Kingdom/`*.
+   *(Usually located in `~/Library/Application Support/noio/Kingdom/` after a game has been started and saved.*
 
 ---
 

@@ -1,3 +1,6 @@
+<img width="692" height="860" alt="gui" src="https://github.com/user-attachments/assets/56dfcad7-89f6-431f-b1ce-6ddc5deb64a0" />
+
+
 # Kingdom: New Lands - Save Editor
 
 This is just a small hobby project I made to easily tweak savegames in *Kingdom: New Lands* without having to manually edit the `.dat` files. 

@@ -1,53 +1,61 @@
-<img width="692" height="860" alt="gui" src="https://github.com/user-attachments/assets/56dfcad7-89f6-431f-b1ce-6ddc5deb64a0" />
+<img width="732" height="930" alt="gui2" src="https://github.com/user-attachments/assets/d4e891c6-11e7-41b0-8767-3611f1796fa8" />
 
+# Kingdom: New Lands - Savegame Editor & Manager 👑🐎
 
-# Kingdom: New Lands - Save Editor
+A lightweight, open-source GUI tool to tweak your *Kingdom: New Lands* save files and manage multiple save slots. Designed for rulers who love the game but have a busy life!
 
-This is just a small hobby project I made to easily tweak savegames in *Kingdom: New Lands* without having to manually edit the `.dat` files. 
+## Why I built this
+After a few frustrating runs on the higher islands, I was almost ready to give up on *Kingdom: New Lands*. As much as I enjoy the game, it simply takes too much time to balance with a full-time job and family life. I wanted to see the later stages of the game without the massive time sink, so I built this tool to speed things up and safely manage my progress.
 
-It features a simple GUI to add units, get some coins, or make the enemy portals a lot weaker. 
+---
 
-## Features
-* **Add Archers:** Spawns new archers on the left or right side.
-* **Get Coins:** Maxes out the Banker (999) or your personal Wallet (40).
-* **Super Shrines:** Sets the Archer and Worker shrines to last 999 days.
-* **Weak Portals:** Reduces all intact portals to 1 HP.
+## ✨ Features
+
+### 💾 Savegame Manager (NEW in v1.1.0)
+* **5 Save Slots:** Easily back up your current progress to one of 5 dedicated slots.
+* **Auto-Timestamps:** Slots automatically display the date and time (AM/PM format) of your save.
+* **Easy Restore:** Messed up a run? Just load your preferred slot and try again without losing everything!
+
+### 🛠️ Quality of Life Tweaks
+* **🏹 Add Archers:** Instantly reinforce your left or right side with new units.
+* **💰 Max Coins:** Fill the Banker's stash (999) or your personal Wallet (40).
+* **⚡ Persistent Shrines:** Set **ALL 4** statues (Archers, Workers, Knights, Building) to last 999 days.
+* **🌌 Weak Portals:** Reduce all intact enemy portals to 1 HP for a much faster clear.
+* **🛡️ Safety First:** Automatically creates a backup (`storage_v34_AUTO.dat#bckp`) before any changes.
+
+---
+
+## 📂 Where is my Savegame?
+The tool modifies the file usually named `storage_v34_AUTO.dat`. It appears after starting and saving a game.
+* **Windows:** `%USERPROFILE%\AppData\LocalLow\noio\Kingdom\`
+* **macOS:** `~/Library/Application Support/noio/Kingdom/`
+* **Linux:** `~/.config/unity3d/noio/Kingdom/`
+
+---
+
+## 📥 Installation & Usage
+
+### 1. Standalone Versions (No Python required)
+Go to the [**Releases**](https://github.com/noplan724/Kingdom_NL_Savegame-editor/releases) section on the right and download the latest version for your system:
+
+* **Windows:** Download the `.exe` file. Double-click to run. (If Windows SmartScreen pops up, click "More info" -> "Run anyway").
+* **macOS:** Download the Mac `.zip` and extract it. **Right-click** the `.app` and select **Open** to bypass the "Unidentified Developer" warning.
+* **Linux:** Download the Linux binary. Make it executable (`chmod +x Linux.KNL.Savegame-editor`) and launch it via terminal (`./Linux.KNL.Savegame-editor`).
+
+### 2. Python Version (Open Source)
+If you prefer running the script directly from source:
+1. Download `knl_savegame_editor.py`.
+2. Install dependencies: `pip install customtkinter`.
+3. Run: `python knl_savegame_editor.py`.
+
+---
 
 ## ⚠️ Important!
-Make sure the game is **closed** before you use this tool! If the game is running, your changes won't be saved or the game might overwrite them.
-*(Note: The tool automatically creates a backup named `storage_34_AUTO.dat#bckp` the first time you use it, just in case).*
+**Make sure the game is completely closed** before using this tool! If the game is running, it might overwrite your changes or fail to load the restored save slots. Always save and quit your game first.
 
 ---
 
-## Option 1: Using the Mac App (.app)
-If you are on a Mac and don't want to mess with code, you can just use the pre-built app.
+## 📜 License
+This project is **Open Source** and licensed under the [MIT License](LICENSE). Feel free to check the code, report bugs, or suggest features!
 
-1. Download the `KingdomSaveEditor.app.zip` from the Releases section and extract it.
-2. Because I'm not a registered Apple Developer, macOS maybe blocks the app if you just double-click it. 
-3. **If so: To open it:** **Right-click** (or Control-click) the `.app` file and select **Open**. Click **Open** again in the warning prompt. 
-4. Click "Change File" and find your savegame.
-   *(Usually located in `~/Library/Application Support/noio/Kingdom/`* after a game has been started and saved.
-
----
-
-## Option 2: Running from Source (Python)
-If you want to run the script yourself, you can use the Python source code.
-
-**Requirements:**
-* Python 3 installed
-* `customtkinter` package for the GUI
-
-**Run:**
-1. Clone this repository or download the `knl_savegame_editor.py` file.
-2. Open your terminal / command prompt and install the required UI library:
-   ```bash
-   pip install customtkinter
-   ```
-3. Run the script:
-   ```bash
-   python knl_savegame_editor.py
-   ```
-4. Select your `storage_34_AUTO.dat` save file and apply the cheats you want.
-
-## Disclaimer
-This is just a fun little DIY project. Use it at your own risk!
+*Disclaimer: Use at your own risk. Always keep a manual backup of your save files if you are worried about your progress.*

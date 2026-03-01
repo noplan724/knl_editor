@@ -5,6 +5,8 @@ import re
 import random
 import os
 import shutil
+import glob
+from datetime import datetime
 
 # --- Global Settings ---
 CURRENT_FILE_PATH = "storage_v34_AUTO.dat"
@@ -43,6 +45,90 @@ def save_savegame(data):
         log(f"Write error: {e}")
         return False
 
+# --- Save Slot Manager Functions ---
+def get_existing_slot_file(slot_num):
+    base_dir = os.path.dirname(CURRENT_FILE_PATH) or "."
+    pattern = os.path.join(base_dir, f"slot{slot_num}_*.dat")
+    matches = glob.glob(pattern)
+    if matches:
+        return matches[0]  # Gibt die erste gefundene Datei für diesen Slot zurück
+    return None
+
+def update_slot_display():
+    values = []
+    for i in range(1, 6):
+        file = get_existing_slot_file(i)
+        if file:
+            basename = os.path.basename(file)
+            match = re.search(r"slot\d+_(.*)\.dat", basename)
+            if match:
+                ts_part = match.group(1) # z.B. "2026-03-01_03-30PM"
+                date_str, time_str = ts_part.split("_")
+                time_str = time_str.replace("-", ":") # Wieder zu "03:30PM" machen
+                values.append(f"Slot {i} [{date_str} {time_str}]")
+            else:
+                values.append(f"Slot {i} [Saved]")
+        else:
+            values.append(f"Slot {i} [Empty]")
+    
+    current_text = combo_slots.get()
+    match = re.search(r"Slot (\d+)", current_text)
+    slot_idx = int(match.group(1)) - 1 if match else 0
+    
+    combo_slots.configure(values=values)
+    combo_slots.set(values[slot_idx])
+
+def backup_to_slot():
+    if not os.path.exists(CURRENT_FILE_PATH):
+        log("Error: Current save file not found. Play the game first to create one.")
+        return
+    
+    match = re.search(r"Slot (\d+)", combo_slots.get())
+    if not match: return
+    slot_num = match.group(1)
+    
+    base_dir = os.path.dirname(CURRENT_FILE_PATH) or "."
+    
+    # Alte Datei in diesem Slot löschen, falls vorhanden
+    old_file = get_existing_slot_file(slot_num)
+    if old_file and os.path.exists(old_file):
+        os.remove(old_file)
+        
+    # Neue Datei mit Zeitstempel erstellen (12-Stunden Format mit AM/PM)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%I-%M%p")
+    new_filename = f"slot{slot_num}_{timestamp}.dat"
+    new_path = os.path.join(base_dir, new_filename)
+    
+    try:
+        shutil.copy2(CURRENT_FILE_PATH, new_path)
+        log(f"Success: Current game saved to Slot {slot_num} ({new_filename}).")
+        update_slot_display() # Dropdown-Menü aktualisieren
+    except Exception as e:
+        log(f"Error saving to slot: {e}")
+
+def restore_from_slot():
+    match = re.search(r"Slot (\d+)", combo_slots.get())
+    if not match: return
+    slot_num = match.group(1)
+    
+    slot_path = get_existing_slot_file(slot_num)
+    
+    if not slot_path or not os.path.exists(slot_path):
+        log(f"Error: Slot {slot_num} is empty.")
+        return
+        
+    try:
+        # Kurzes Backup vor dem Überschreiben der aktiven Datei
+        create_backup()
+        shutil.copy2(slot_path, CURRENT_FILE_PATH)
+        log(f"Success: Slot {slot_num} loaded! The game is now set to this state.")
+    except Exception as e:
+        log(f"Error restoring from slot: {e}")
+
+def filename_only(path):
+    return os.path.basename(path)
+
+# --- Cheat Functions ---
 def get_next_archer_ids(data):
     objects = data.get("objects", [])
     max_x = 0
@@ -184,9 +270,18 @@ def set_shrine_time():
     data = load_savegame()
     if not data: return
     found_any = False
+    
+    # Korrigierte, exakte Namen aus dem Spielcode für alle 4 Schreine
+    shrine_names = [
+        "Statue Archer", "Statue Archer(Clone)", 
+        "Statue Worker", "Statue Worker(Clone)", 
+        "Statue Knight", "Statue Knight(Clone)",
+        "Statue Building", "Statue Building(Clone)"
+    ]
+    
     for obj in data.get("objects", []):
         name = obj.get("name", "")
-        if name in ["Statue Archer(Clone)", "Statue Worker(Clone)"]:
+        if name in shrine_names:
             for comp in obj.get("componentData2", []):
                 if comp.get("name") == "Statue":
                     try:
@@ -198,9 +293,9 @@ def set_shrine_time():
                         pass
     if found_any:
         if save_savegame(data):
-            log("Success: Shrines are now active for 999 days!")
+            log("Success: All Shrines (Archer, Worker, Knight, Building) are now active for 999 days!")
     else:
-        log("Error: No statues (Archer/Worker) found in save file.")
+        log("Error: No statues found in save file.")
 
 def set_portal_hp():
     data = load_savegame()
@@ -228,11 +323,12 @@ def show_howto():
     howto_text = (
         "Welcome to the Kingdom: New Lands Save Editor!\n\n"
         "This tool edits the underlying savegame file of your game.\n\n"
+        "--- SAVE SLOTS ---\n"
+        "You can now manage up to 5 save slots! Select a slot from the dropdown and hit 'Save to Slot' to back up your current progress. Click 'Load Slot' to restore it later.\n\n"
         "--- IMPORTANT ---\n"
         "Some functions are only possible if the game is completely CLOSED. "
         "If the game is running while you edit the file, it might overwrite your changes or fail to load them. "
-        "Always save and quit your game before clicking the cheat buttons!\n\n"
-        "A backup file (*.dat#bckp) is automatically created the first time you modify your save."
+        "Always save and quit your game before clicking the cheat buttons!"
     )
     messagebox.showinfo("Instructions", howto_text)
 
@@ -245,7 +341,8 @@ def change_file():
     if filepath:
         CURRENT_FILE_PATH = filepath
         lbl_file.configure(text=f"...{filepath[-40:]}")
-        log(f"New file selected. (Backup will be created on first edit)")
+        log(f"New file selected. Slots will be saved in the same folder.")
+        update_slot_display()
 
 def log(message):
     text_log.configure(state="normal")
@@ -256,7 +353,7 @@ def log(message):
 # --- App Window ---
 app = ctk.CTk()
 app.title("Kingdom: New Lands - Save Editor")
-app.geometry("580x720") # Fenster etwas höher für den Exit-Button
+app.geometry("620x790") 
 app.resizable(False, False)
 
 # --- Header ---
@@ -264,20 +361,37 @@ header_frame = ctk.CTkFrame(app, fg_color="transparent")
 header_frame.pack(pady=20, fill="x")
 
 ctk.CTkLabel(header_frame, text="Kingdom: New Lands", font=ctk.CTkFont(size=24, weight="bold")).pack()
-ctk.CTkLabel(header_frame, text="Savegame Editor", font=ctk.CTkFont(size=16), text_color="gray").pack()
+ctk.CTkLabel(header_frame, text="Savegame Editor & Manager", font=ctk.CTkFont(size=16), text_color="gray").pack()
 
 btn_howto = ctk.CTkButton(header_frame, text="📘 Instructions / HowTo", fg_color="#455A64", hover_color="#37474F", command=show_howto)
 btn_howto.pack(pady=10)
 
 # --- File Section ---
 file_frame = ctk.CTkFrame(app)
-file_frame.pack(padx=20, pady=10, fill="x")
+file_frame.pack(padx=20, pady=5, fill="x")
 
 lbl_file = ctk.CTkLabel(file_frame, text=CURRENT_FILE_PATH, text_color="gray")
 lbl_file.pack(side="left", padx=15, pady=10)
 
 btn_file = ctk.CTkButton(file_frame, text="Change File", width=100, command=change_file)
 btn_file.pack(side="right", padx=15, pady=10)
+
+# --- Save Slots Section ---
+slots_frame = ctk.CTkFrame(app)
+slots_frame.pack(padx=20, pady=(5, 10), fill="x")
+
+ctk.CTkLabel(slots_frame, text="Save Slots:", font=ctk.CTkFont(weight="bold")).pack(side="left", padx=15, pady=10)
+
+# Das Dropdown wurde auf width=210 gesetzt, damit Datum + AM/PM komplett sichtbar sind
+combo_slots = ctk.CTkComboBox(slots_frame, values=["Slot 1", "Slot 2", "Slot 3", "Slot 4", "Slot 5"], width=210)
+combo_slots.pack(side="left", padx=(0, 10), pady=10)
+combo_slots.set("Slot 1")
+
+btn_save_slot = ctk.CTkButton(slots_frame, text="💾 Save to Slot", width=110, fg_color="#1565C0", hover_color="#0D47A1", command=backup_to_slot)
+btn_save_slot.pack(side="left", padx=5, pady=10)
+
+btn_load_slot = ctk.CTkButton(slots_frame, text="📂 Load Slot", width=110, fg_color="#2E7D32", hover_color="#1B5E20", command=restore_from_slot)
+btn_load_slot.pack(side="left", padx=5, pady=10)
 
 # --- Cheats Section ---
 cheats_frame = ctk.CTkFrame(app)
@@ -315,8 +429,8 @@ btn_portal = ctk.CTkButton(cheats_frame, text="🌌 Portals: 1 HP", fg_color="#C
 btn_portal.grid(row=3, column=1, padx=10, pady=(10, 15), sticky="ew")
 
 # --- Log Section ---
-text_log = ctk.CTkTextbox(app, height=100, font=ctk.CTkFont(family="Consolas", size=13))
-text_log.pack(padx=20, pady=(10, 5), fill="both", expand=True)
+text_log = ctk.CTkTextbox(app, height=90, font=ctk.CTkFont(family="Consolas", size=13))
+text_log.pack(padx=20, pady=(5, 5), fill="both", expand=True)
 text_log.configure(state="disabled")
 
 # --- Exit Button ---
@@ -329,6 +443,9 @@ if not os.path.exists(CURRENT_FILE_PATH):
     log("Please select your savegame using the 'Change File' button.")
 else:
     log("Ready! Save file found.")
+
+# Update Slots on Startup
+update_slot_display()
 
 # Start Mainloop
 app.mainloop()
